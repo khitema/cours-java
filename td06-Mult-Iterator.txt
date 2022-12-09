@@ -1,0 +1,134 @@
+	public static List<Integer> twice(List<Integer> l) {
+		List<Integer> ret = new ArrayList<>();
+		for(int i:l) {
+			ret.add(i*2);
+		}
+		return ret;
+	}
+
+	public static List<Integer> twice2(List<Integer> l) {
+		if(l instanceof RandomAccess) {	//interface marqueur, qui ne sert pas vraimetn au sens interface !
+			//a utiliser si random access: doit redefinir le get, l'iterator est fait par l'abstract
+			return new AbstractList<Integer>() {
+
+				@Override
+				public Integer get(int index) {
+					return l.get(index)*2;
+				}
+
+				@Override
+				public int size() {
+					return l.size();
+				}
+			};
+		}
+		else {
+			//inverse de abstractlist: doit redefinir l'iterator, et le get est fait a partir de celui-ci. 
+			//a utiliser si pas randomaccess !
+			return new AbstractSequentialList<Integer>() {
+
+				@Override
+				public ListIterator<Integer> listIterator(int index) {
+					return new ListIterator<Integer>() {
+						
+						//on utilise massivement le listIterator de la liste initiale
+						//il faut bien initialiser le listIterator au bon endroit !
+						//(ce qui engendre tout de meme un parcours de liste !)
+						//(non utilisé si parcouru avec un foreach
+						private ListIterator<Integer> myLit = l.listIterator(index);
+						
+						@Override
+						public boolean hasNext() {
+							return myLit.hasNext();
+						}
+
+						@Override
+						public Integer next() {
+							return myLit.next()*2;
+						}
+
+						@Override
+						public boolean hasPrevious() {
+							return myLit.hasPrevious();
+						}
+
+						@Override
+						public Integer previous() {
+							return myLit.previous();
+						}
+
+						@Override
+						public int nextIndex() {
+							return myLit.nextIndex();
+						}
+
+						@Override
+						public int previousIndex() {
+							return myLit.previousIndex();
+						}
+
+						@Override
+						public void remove() {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						/*
+						 * Les methodes remove, set et add ne sont
+						 * pas implementees car on ne souhaite pas
+						 * proposer une liste modifiable
+						 */
+						@Override
+						public void set(Integer e) {
+							throw new UnsupportedOperationException("unmutable");
+						}
+
+						@Override
+						public void add(Integer e) {
+							throw new UnsupportedOperationException("unmutable");							
+						}
+					};
+				}
+
+				@Override
+				public int size() {
+					return l.size();
+				}
+
+			};
+		}
+	}
+
+	public static void main(String[] args) {
+		List<Integer> l1 = Arrays.asList(1,2,3,4);
+		System.out.println(twice(l1));
+		System.out.println(twice2(l1));
+		
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		for (int i = 0; i < 1000000; i++) {
+			list.add(i);
+		}
+
+		long t0 = System.nanoTime();
+		List<Integer> ret = twice2(list);
+		for(int i : ret) {
+			;
+		}
+		System.out.println((System.nanoTime() - t0));
+		
+		
+		LinkedList<Integer> lList = new LinkedList<Integer>();
+		for (int i = 0; i < 1000000; i++) {
+			lList.add(i);
+		}
+		t0 = System.nanoTime();
+		ret = twice2(lList);
+		for(int i : ret) {
+			;
+		}
+		System.out.println((System.nanoTime() - t0));
+		
+		System.out.println("test " + ret.get(50));
+		
+		lList.listIterator(50);
+	}
